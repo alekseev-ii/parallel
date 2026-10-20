@@ -6,6 +6,9 @@
 #include <random>
 #include <windows.h>
 #include <process.h>
+#include <stdexcept>
+#include <stdexcept>
+#include <cerrno>
 
 struct calc_args
 {
@@ -56,7 +59,7 @@ bool isInside(double x, double y, double radius)
   return x * x + y * y <= radius * radius;
 }
 
-unsigned calc(void * args)
+unsigned __stdcall calc(void * args)
 {
   const auto * real_args = static_cast< calc_args * >(args);
   unsigned result = 0;
@@ -81,38 +84,48 @@ double area(double radius, size_t threads, size_t tests)
     args[i] = {.radius = radius, .tests = tests_per_thread, .seed = rd()};
     auto hth = reinterpret_cast< HANDLE >(
       _beginthreadex(nullptr, 0u, calc, &args[i], 0, nullptr));
-    assert(hth != nullptr);
+    if (hth == nullptr) {
+      throw std::runtime_error("Couldn't create thread: " + std::to_string(errno));
+    }
     hthreads.push_back(hth);
   }
 
-  args[threads] = {.radius = radius, .tests = tests % threads, .seed = rd()};
-  auto remainder = reinterpret_cast< HANDLE >(
-    _beginthreadex(nullptr, 0u, calc, &args, 0, nullptr));
-  assert(remainder != nullptr);
   size_t result = 0;
+
+  if (tests % threads) {
+    args[threads] = {.radius = radius, .tests = tests % threads, .seed = rd()};
+    auto remainder = reinterpret_cast< HANDLE >(
+      _beginthreadex(nullptr, 0u, calc, &args[threads], 0, nullptr));
+    if (remainder == nullptr) {
+      throw std::runtime_error("Couldn't create thread: " + std::to_string(errno));
+    }
+    DWORD res = WaitForSingleObject(remainder, INFINITE);
+    if (res != WAIT_OBJECT_0) {
+      report_error(std::cerr) << "\n";
+    }
+    DWORD exitCode = 0;
+    if (GetExitCodeThread(remainder, &exitCode)) {
+      result += exitCode;
+    } else {
+      report_error(std::cerr) << "\n";
+    }
+    CloseHandle(remainder);
+  }
 
   for (size_t i = 0; i < threads; ++i) {
     auto hth = hthreads[i];
     DWORD res = WaitForSingleObject(hth, INFINITE);
     if (res != WAIT_OBJECT_0) {
       report_error(std::cerr) << "\n";
-    } else {
-      GetExitCodeThread(hth, &res);
-      std::cerr << res << "\n";
     }
-    result += res;
+    DWORD exitCode = 0;
+    if (GetExitCodeThread(hth, &exitCode)) {
+      result += exitCode;
+    } else {
+      report_error(std::cerr) << "\n";
+    }
     CloseHandle(hth);
   }
-
-  DWORD res = WaitForSingleObject(remainder, INFINITE);
-  if (res != WAIT_OBJECT_0) {
-    report_error(std::cerr) << "\n";
-  } else {
-    GetExitCodeThread(remainder, &res);
-    std::cerr << res << "\n";
-  }
-  result += res;
-  CloseHandle(remainder);
 
   return static_cast< double >(result) / static_cast< double >(tests) * 4 * radius * radius;
 }
