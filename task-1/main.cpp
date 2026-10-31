@@ -4,32 +4,31 @@
 #include <iomanip>
 
 bool isInside(double x, double y, double radius);
+
 size_t calc(double radius, size_t tests, size_t seed);
+
 double area(double radius, size_t threads, size_t tests);
 
 int main()
 {
+  size_t tests = 100000000;
+  double radius = 1.0;
+  double a = 0.0;
   for (size_t threads = 1; threads <= 24; ++threads) {
-    size_t tests = 100000000;
-    double radius = 1;
-    //std::cin >> radius >> tests >> threads;
-    double a = 0;
     auto start = std::chrono::high_resolution_clock::now();
     a = area(radius, threads, tests);
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << std::setw(3) << threads << " " << std::setw(7) << a << " " << duration.count() << "\n";
+    auto duration = std::chrono::duration_cast< std::chrono::milliseconds >(end - start);
+    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() <<
+        "\n";
   }
   for (size_t threads = 25; threads <= 200; threads += 25) {
-    size_t tests = 100000000;
-    double radius = 1;
-    //std::cin >> radius >> tests >> threads;
-    double a = 0;
     auto start = std::chrono::high_resolution_clock::now();
     a = area(radius, threads, tests);
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << std::setw(3) << threads << " " << std::setw(7) << a << " " << duration.count() << "\n";
+    auto duration = std::chrono::duration_cast< std::chrono::milliseconds >(end - start);
+    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() <<
+        "\n";
   }
 }
 
@@ -58,12 +57,12 @@ double area(double radius, size_t threads, size_t tests)
   for (size_t i = 0; i < threads; i++) {
     std::random_device rd;
     std::future< size_t > ft =
-      std::async(std::launch::async,calc, radius, tests_per_thread, rd());
+        std::async(std::launch::async, calc, radius, tests_per_thread, rd());
     allFutures.push_back(std::move(ft));
   }
   std::random_device rd;
   std::future< size_t > remainder =
-    std::async(std::launch::async, calc, radius, tests % threads, rd());
+      std::async(std::launch::async, calc, radius, tests % threads, rd());
   size_t result = 0;
   for (size_t i = 0; i < threads; i++) {
     result += allFutures[i].get();

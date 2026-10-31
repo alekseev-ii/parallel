@@ -6,7 +6,7 @@
 
 int main()
 {
-  size_t tests = 100000000;
+  size_t tests = 10000000;
   double radius = 1.0;
   double a = 0.0;
   for (size_t threads = 1; threads <= 24; threads++) {
@@ -14,15 +14,15 @@ int main()
     a = area(radius, threads, tests);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast< std::chrono::milliseconds >(end - start);
-    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() << "\n";
+    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() <<
+        "\n";
   }
   for (size_t threads = 25; threads <= 200; threads += 25) {
     auto start = std::chrono::high_resolution_clock::now();
     a = area(radius, threads, tests);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast< std::chrono::milliseconds >(end - start);
-    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() << "\n";
+    std::cout << std::setw(3) << threads << "|" << std::setw(7) << a << "|" << duration.count() <<
+        "\n";
   }
 }
-
-
