@@ -9,11 +9,6 @@
 #include "area/area.h"
 
 namespace {
-    bool isInside(double x, double y, double radius) {
-        return x * x + y * y <= radius * radius;
-    }
-
-
     struct raii_handle {
         HANDLE h;
 
@@ -82,9 +77,13 @@ namespace {
     }
 }
 
+bool isInside(double x, double y, double radius) {
+    return x * x + y * y <= radius * radius;
+}
+
 double area(double radius, size_t threads, size_t tests) {
     if (tests == 0 || threads == 0) {
-        throw std::invalid_argument("Invalid arguments");
+        throw std::invalid_argument("Tests and threads must be greater than 0");
     }
     threads = std::min(threads, tests);
     size_t tests_per_thread = tests / threads;

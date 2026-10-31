@@ -6,10 +6,10 @@
 
 int main()
 {
-  size_t tests = 10000000;
+  size_t tests = 100000000;
   double radius = 1.0;
   double a = 0.0;
-  for (size_t threads = 10; threads <= 24; threads++) {
+  for (size_t threads = 1; threads <= 24; threads++) {
     auto start = std::chrono::high_resolution_clock::now();
     a = area(radius, threads, tests);
     auto end = std::chrono::high_resolution_clock::now();
