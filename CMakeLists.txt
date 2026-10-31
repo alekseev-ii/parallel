@@ -5,7 +5,13 @@ set(CMAKE_CXX_STANDARD 14)
 
 include_directories(task-2)
 
-add_executable(parallel
-        task-2/area.h
+set(COMMON_SOURCES
         task-2/main.cpp
-        task-2/area.cpp)
+        task-2/area/area.h
+        task-2/area/area_posix/area_posix.cpp)
+
+if(WIN32)
+    list(APPEND COMMON_SOURCES task-2/area/area_win/area_win.cpp)
+endif ()
+
+add_executable(parallel ${COMMON_SOURCES})
